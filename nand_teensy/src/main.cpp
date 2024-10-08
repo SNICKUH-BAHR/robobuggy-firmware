@@ -118,7 +118,7 @@ void setReports(void)
   }
   if (!bno08x.enableReport(SH2_GRAVITY)) {
     Serial.println("Could not enable gravity vector");
-  }
+  }*/
   if (!bno08x.enableReport(SH2_ROTATION_VECTOR)) {
     Serial.println("Could not enable rotation vector");
   }
@@ -128,7 +128,7 @@ void setReports(void)
   if (!bno08x.enableReport(SH2_GAME_ROTATION_VECTOR)) {
     Serial.println("Could not enable game rotation vector");
   }
-  if (!bno08x.enableReport(SH2_RAW_ACCELEROMETER)) {
+  /*if (!bno08x.enableReport(SH2_RAW_ACCELEROMETER)) {
     Serial.println("Could not enable raw accelerometer");
   }
   if (!bno08x.enableReport(SH2_RAW_GYROSCOPE)) {
@@ -570,6 +570,39 @@ void loop()
 
             heading_rate = z;
           }
+
+          else if (sensorValue.sensorId == SH2_ROTATION_VECTOR) //rot with acc
+          {
+            double i_acc = sensorValue.un.rotationVector.i;
+            double j_acc = sensorValue.un.rotationVector.j;
+            double k_acc = sensorValue.un.rotationVector.k;
+            double real_acc = sensorValue.un.rotationVector.real;
+            double accuracy_acc = sensorValue.un.rotationVector.accuracy;
+            sd_logging::log_imu_acc(i_acc,j_acc,k_acc,real_acc,accuracy_acc);
+            Serial.printf("i_acc:%f, j_acc:%f, k_acc:%f, real_acc:%f, accuracy_acc:%f\n",i_acc,j_acc,k_acc,real_acc,accuracy_acc);
+          }
+
+          else if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) // geomagnetic with acc
+          {
+            double i_mag = sensorValue.un.geoMagRotationVector.i;
+            double j_mag = sensorValue.un.geoMagRotationVector.j;
+            double k_mag = sensorValue.un.geoMagRotationVector.k;
+            double real_mag = sensorValue.un.geoMagRotationVector.real;
+            double accuracy_mag = sensorValue.un.geoMagRotationVector.accuracy;
+            sd_logging::log_imu_geo(i_mag,j_mag,k_mag,real_mag,accuracy_mag);
+            Serial.printf("i_mag:%f, j_mag:%f, k_mag:%f, real_mag:%f, accuracy_mag:%f\n",i_mag,j_mag,k_mag,real_mag,accuracy_mag);
+          }
+
+          else if (sensorValue.sensorId == SH2_GAME_ROTATION_VECTOR) //only rotation
+          {
+            double i_rot = sensorValue.un.gameRotationVector.i;
+            double j_rot = sensorValue.un.gameRotationVector.j;
+            double k_rot = sensorValue.un.gameRotationVector.k;
+            double real_rot = sensorValue.un.gameRotationVector.real;
+            sd_logging::log_imu_gme(i_rot,j_rot,k_rot,real_rot);
+            Serial.printf("i_rot:%f, j_rot:%f, k_rot:%f, real_rot:%f\n",i_rot,j_rot,k_rot,real_rot);
+          }
+
         }
       }
 

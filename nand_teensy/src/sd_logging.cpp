@@ -13,6 +13,9 @@ static File GPS_FILE {};
 static File ENCODER_FILE {};
 static File FILTER_FILE {};
 static File COVARIANCE_FILE {};
+static File IMU_ACC_FILE {};
+static File IMU_GME_FILE {};
+static File IMU_GEO_FILE {};
 
 void init() {
 	if (!DO_LOGGING) {
@@ -30,12 +33,18 @@ void init() {
 	char encoder_file_name[100];
 	char filter_file_name[100];
 	char covar_file_name[100];
+	char imu_acc_file_name[100];
+	char imu_geo_file_name[100];
+	char imu_gme_file_name[100];
 	while (true) {
 		snprintf(steering_file_name, sizeof(steering_file_name), "log%d-steering.csv", file_num);
 		snprintf(gps_file_name,      sizeof(gps_file_name),      "log%d-gps.csv",      file_num);
 		snprintf(encoder_file_name,  sizeof(encoder_file_name),  "log%d-encoder.csv",  file_num);
 		snprintf(filter_file_name,   sizeof(filter_file_name),   "log%d-filter.csv",   file_num);
 		snprintf(covar_file_name,    sizeof(covar_file_name),    "log%d-covar.csv",    file_num);
+		snprintf(imu_acc_file_name,	 sizeof(imu_acc_file_name),  "log%d-imu_acc.csv",  file_num);
+		snprintf(imu_geo_file_name,  sizeof(imu_geo_file_name),  "log%d-imu_geo.csv",  file_num);
+		snprintf(imu_gme_file_name,  sizeof(imu_gme_file_name),  "log%d-imu_gme.csv",  file_num);
 
 		if (!SD.exists(steering_file_name)) {
 			break;
@@ -49,12 +58,18 @@ void init() {
 	ENCODER_FILE    = SD.open(encoder_file_name, FILE_WRITE);
 	FILTER_FILE     = SD.open(filter_file_name, FILE_WRITE);
 	COVARIANCE_FILE = SD.open(covar_file_name, FILE_WRITE);
+	IMU_ACC_FILE    = SD.open(imu_acc_file_name, FILE_WRITE);
+	IMU_GEO_FILE    = SD.open(imu_geo_file_name, FILE_WRITE);
+	IMU_GME_FILE    = SD.open(imu_gme_file_name, FILE_WRITE);
 
 	STEERING_FILE.write("timestamp,steering\n");
 	GPS_FILE.write("timestamp,pos_x,pos_y,accuracy\n");
 	ENCODER_FILE.write("timestamp,speed\n");
 	FILTER_FILE.write("timestamp,pos_x,pos_y,heading\n");
 	COVARIANCE_FILE.write("timestamp,c1,c2,c3,c4,c5,c6,c7,c8,c9\n");
+	IMU_ACC_FILE.write("timestamp,i,j,k,real,accuracy\n");
+	IMU_GEO_FILE.write("timestamp,i,j,k,real,accuracy\n");
+	IMU_GME_FILE.write("timestamp,i,j,k,real\n");
 }
 
 void log_steering(double angle) {
@@ -110,6 +125,36 @@ void log_covariance(const state_cov_matrix_t &cov) {
 		cov(2, 0), cov(2, 1), cov(2, 2)
 	);
 	COVARIANCE_FILE.write(buf, cnt);
+}
+
+void log_imu_acc(double i, double j, double k, double real, double accuracy) {
+	if(!DO_LOGGING) {
+		return;
+	}
+
+	char buf[200];
+	size_t cnt = snprintf(buf, sizeof(buf), "%lu,%f,%f,%f,%f,%f",millis(),i,j,k,real,accuracy);
+	IMU_ACC_FILE.write(buf,cnt);
+}
+
+void log_imu_geo(double i, double j, double k, double real, double accuracy) {
+	if(!DO_LOGGING) {
+		return;
+	}
+
+	char buf[200];
+	size_t cnt = snprintf(buf, sizeof(buf), "%lu,%f,%f,%f,%f,%f",millis(),i,j,k,real,accuracy);
+	IMU_GEO_FILE.write(buf,cnt);
+}
+
+void log_imu_gme(double i, double j, double k, double real) {
+	if(!DO_LOGGING) {
+		return;
+	}
+
+	char buf[200];
+	size_t cnt = snprintf(buf, sizeof(buf), "%lu,%f,%f,%f,%f",millis(),i,j,k,real);
+	IMU_GME_FILE.write(buf,cnt);
 }
 
 void flush_files() {
