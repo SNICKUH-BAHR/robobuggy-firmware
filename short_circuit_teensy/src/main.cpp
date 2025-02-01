@@ -48,7 +48,7 @@ void setup()
   }
 
   host_comms::init();
-
+  RateLimit timestamp_roundtrip { 100 };
   pinMode(VOLTAGE_PIN, INPUT);
 
   rc::init(RC_SERIAL);
@@ -124,10 +124,18 @@ void loop()
 
   uint32_t loop_start = millis();
 
+  bool time_rate_ready = timestamp_roundtrip.ready();
+
   rc::update();
 
   host_comms::poll();
+  host_comms::Roundtrip get_poll_time;
+  get_poll_time.time = millis();
+  get_poll_time.soft_time = host_comms::software_time();
 
+  if (time_rate_ready) {
+    host_comms::send_timestamp(get_poll_time);
+  }
 
   Rgb blue   = { 0x00, 0x00, 0xFF };
   Rgb orange = { 0xFF, 0x80, 0x00 };

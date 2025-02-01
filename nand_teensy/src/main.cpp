@@ -300,6 +300,7 @@ void loop()
   /* timestamp, type of data, <rest of data> */
 
   RateLimit radio_tx_limit { 200 };
+  RateLimit timestamp_roundtrip { 100 };
 
   GpsUpdate last_gps_data { 0 };
   bool fresh_gps_data = false;
@@ -356,9 +357,19 @@ void loop()
       rgb = Rgb { 0x80, 0x80, 0x00 };
     }
 
+    bool time_rate_ready = timestamp_roundtrip.ready();
+    
+
     rc::update();
 
     host_comms::poll();
+    host_comms::Roundtrip get_poll_time;
+    get_poll_time.time = millis();
+    get_poll_time.soft_time = host_comms::software_time();
+
+    if (time_rate_ready) {
+      host_comms::send_timestamp(get_poll_time);
+    }
 
     float steering_command = rc::use_autonomous_steering() ? host_comms::steering_angle() : rc::steering_angle();
     steering::set_goal_angle(steering_command);
